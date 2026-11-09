@@ -324,7 +324,17 @@ const tone = (t) => /did not go through|overruled"|Rejected|No wallet|Could not|
   : /ruled OVERRULE/.test(t) ? "bad" : /Paid|Signed|holds|ruled CONTINUE/.test(t) ? "good" : "";
 const paint = (t) => { $("status").className = "status " + tone(t); };
 const say = (t) => { $("status").textContent = t; paint(t); };
-const errText = (e) => e?.code === 4001 || e?.code === "ACTION_REJECTED" ? "Rejected in the wallet." : (e?.shortMessage || e?.reason || e?.message || String(e));
+// A revert reason can sit at different depths depending on the wallet; look everywhere, and decode Error(string) data.
+function revertReason(e) {
+  const seen = new Set(), texts = [];
+  (function walk(x, d) { if (x == null || d > 5) return; if (typeof x === "string") { texts.push(x); return; } if (typeof x !== "object" || seen.has(x)) return; seen.add(x);
+    for (const k of Object.getOwnPropertyNames(x)) { try { walk(x[k], d + 1); } catch {} } })(e, 0);
+  for (const t of texts) { const m = t.match(/(CourtEnforcer|ERC20TransferAmountEnforcer|DelegationManager)[:\w-]*/); if (m) return m[0]; }
+  for (const t of texts) { const m = t.match(/0x08c379a0[0-9a-fA-F]+/); if (m) { try { return AbiCoder.defaultAbiCoder().decode(["string"], "0x" + m[0].slice(10))[0]; } catch {} } }
+  return null;
+}
+const errText = (e) => { if (e?.code === 4001 || e?.code === "ACTION_REJECTED") return "Rejected in the wallet.";
+  const r = revertReason(e); return r ? `execution reverted: "${r}"` : (e?.shortMessage || e?.reason || e?.message || String(e)); };
 $("mandate").value = MANDATE;
 for (const [elId, addr, base] of [["aCourt", DEP.overrule, EXPLORER], ["aEnf", DEP.court_enforcer, CHAIN_EXPLORER], ["aDm", DEP.delegation_manager, CHAIN_EXPLORER], ["aHy", DEP.hybrid_impl, CHAIN_EXPLORER]]) { $(elId).href = base + "/address/" + addr; $(elId).textContent = addr; }
 const store = { get: (k) => { try { return JSON.parse(localStorage.getItem("overrule:" + account + ":" + k)); } catch { return null; } },
@@ -411,7 +421,7 @@ async function pay(to, units, memo) {
     say(`As the agent, redeem the delegation: pay ${units} tUSD ...`);
     const dm = new Contract(DEP.delegation_manager, DM_ABI, signer);
     await (await dm.redeemDelegations([ctx], [SINGLE_DEFAULT], [solidityPacked(["address", "uint256", "bytes"], [DEP.testusd, 0, call])])).wait();
-    say(`Paid ${units} tUSD under the delegation. The CourtEnforcer recorded it with your memo.`); refresh(); lookup();
+    say(`Paid ${units} tUSD under the delegation. The CourtEnforcer recorded it with your memo.`); refresh(); lookup(); setTimeout(() => { refresh(); lookup(); }, 4000);
   } catch (e) { say("The payment did not go through: " + errText(e)); }
 }
 $("payOk").onclick = () => pay(VENDOR, 10, "API credits for this month");
@@ -444,7 +454,10 @@ $("review").onclick = async () => {
           for (let k = 0; k < 20 && !(await enfRead.overruled(d.hash)); k++) { link("Final: Internet Court ruled OVERRULE. Waiting for the court's call to land on the enforcer..."); await sleep(5000); }
           link("Final: Internet Court ruled OVERRULE, and the delegation is revoked on chain. Try to pay again.");
         } else link("Final: Internet Court ruled CONTINUE. The delegation keeps working.");
-        refresh(); lookup(); loadBoard(); return;
+        loadBoard();
+        // A node can be a block behind right after finality: read again until the record shows what the court decided.
+        for (let k = 0; k < 8; k++) { await refresh(); await lookup(); if (last.verdict !== "OVERRULE" || document.querySelector("#result .stamp.bad")) break; await sleep(2500); }
+        return;
       }
       if (["UNDETERMINED", "CANCELED", "LEADER_TIMEOUT", "VALIDATORS_TIMEOUT"].includes(name)) { link(`The round ended ${name} and changed nothing.`); return; }
       link(name === "ACCEPTED" ? "Accepted by the validators. The court acts only once its verdict is final..." : `The judges are reading the payments... ${(i + 1) * 6}s, ${name || "waiting for the network"}.`);
@@ -459,7 +472,8 @@ async function lookup() {
     const [s, c] = await Promise.all([enfRead.state(d.hash), reader.readContract({ address: DEP.overrule, functionName: "case", args: [d.hash] }).then(JSON.parse)]);
     const box = $("result"); box.style.display = "block";
     const log = (c.log || []).slice().reverse().map((e) => `<div>Review #${e.n}: <span class="st ${esc(e.verdict)}">${esc(e.verdict)}</span> on payments ${e.from} to ${e.to - 1}. ${esc(e.why)}</div>`).join("");
-    box.innerHTML = `<div class="verdict-head"><span class="stamp ${s[0] ? "bad" : "good"}">${s[0] ? "OVERRULED" : "ACTIVE"}</span><div><b>${s[0] ? "Revoked by Internet Court" : "Your delegation is live"}</b><div class="muted">${esc(s[2])} payment(s) on record under this delegation</div></div></div>
+    const dead = Boolean(s[0]) || c.status === "OVERRULED";
+    box.innerHTML = `<div class="verdict-head"><span class="stamp ${dead ? "bad" : "good"}">${dead ? "OVERRULED" : "ACTIVE"}</span><div><b>${dead ? "Revoked by Internet Court" : "Your delegation is live"}</b><div class="muted">${esc(s[2])} payment(s) on record under this delegation</div></div></div>
       <div class="kv"><div>Delegation</div><div class="mono">${esc(d.hash)}</div><div>Mandate hash</div><div class="mono">${esc(s[1])}</div></div><div class="log">${log}</div>`;
   } catch (e) { say("Could not read: " + errText(e)); }
 }
