@@ -4,124 +4,273 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Overrule: Internet Court for MetaMask delegations</title>
+<meta name="description" content="An open source GenLayer testnet demo: an AI agent's delegated spending, reviewed by Internet Court and revoked on chain when the agent breaks its mandate." />
 <link rel="icon" href="docs/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <style>
-  :root{ --bg:#08090d; --card:#11141c; --line:#232837; --ink:#eef1f7; --dim:#a3acc2; --faint:#6b7590;
-    --accent:#f59e0b; --clear:#4ade80; --caution:#fbbf24; --danger:#fb7185; --unv:#94a3b8; }
+  :root{
+    --bg:#060913; --bg2:#0a1022; --card:rgba(17,23,42,.72); --card2:#0d1426; --line:rgba(148,163,209,.14); --line2:rgba(148,163,209,.24);
+    --ink:#eef2ff; --dim:#a7b1cf; --faint:#6f7a9c;
+    --amber:#f5a524; --amber2:#ffcf6b; --violet:#8b7cff; --cyan:#4cc9f0;
+    --ok:#34d399; --okbg:rgba(52,211,153,.12); --bad:#fb6f84; --badbg:rgba(251,111,132,.12);
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 ui-sans-serif,system-ui,-apple-system,sans-serif}
-  a{color:var(--accent)}
-  .wrap{max-width:980px;margin:0 auto;padding:0 18px 70px}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px}
-  .brand img{width:30px;height:30px;border-radius:7px}
-  .net{font:12px ui-monospace,monospace;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
-  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#1a1f2c;color:var(--ink);padding:9px 14px}
-  button.primary{background:var(--accent);color:#1b1203;border-color:transparent;font-weight:700}
-  button.chip{padding:6px 10px;font-size:13px;border-radius:999px}
-  button:disabled{opacity:.5;cursor:default}
-  h1{font-size:30px;line-height:1.2;margin:28px 0 8px;letter-spacing:-.4px}
-  h2{font:13px ui-monospace,monospace;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin:30px 0 8px}
-  .lead{color:var(--dim);max-width:760px}
-  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}
-  label{display:block;font:12px ui-monospace,monospace;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin:10px 0 5px}
-  input,select{width:100%;background:#0b0e15;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:10px 11px;font:inherit}
-  .grid{display:grid;grid-template-columns:180px 1fr;gap:10px}
-  @media (max-width:640px){ .grid{grid-template-columns:1fr} h1{font-size:24px} }
-  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
-  .muted{color:var(--faint);font-size:13px}
-  .status{margin-top:10px;color:var(--dim);font-size:14px;min-height:18px}
-  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  @media (max-width:760px){ .three{grid-template-columns:1fr} }
-  .step b{display:block;color:var(--ink);margin-bottom:4px}
-  .step{color:var(--dim);font-size:14px;border:1px solid var(--line);border-radius:12px;padding:14px;background:#0d1018}
-  .verdict{display:inline-block;font:700 14px ui-monospace,monospace;padding:6px 12px;border-radius:999px}
-  .v-CLEAR{background:#10261a;color:var(--clear)} .v-CAUTION{background:#2a2110;color:var(--caution)}
-  .v-DANGER{background:#2c1218;color:var(--danger)} .v-UNVERIFIED,.v-UNREVIEWED,.v-INCOMPLETE{background:#1b2030;color:var(--unv)}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font:16px/1.6 Inter,ui-sans-serif,system-ui,sans-serif;background:var(--bg);min-height:100vh;overflow-x:hidden}
+  body::before{content:"";position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(900px 520px at 12% -8%, rgba(139,124,255,.22), transparent 60%),
+      radial-gradient(800px 520px at 95% 6%, rgba(245,165,36,.16), transparent 60%),
+      radial-gradient(900px 700px at 50% 120%, rgba(76,201,240,.10), transparent 60%),
+      linear-gradient(180deg,var(--bg),var(--bg2));}
+  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;
+    background-image:linear-gradient(rgba(148,163,209,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,209,.07) 1px,transparent 1px);
+    background-size:44px 44px;mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 75%)}
+  a{color:var(--amber2);text-decoration:none} a:hover{text-decoration:underline}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px 80px}
+
+  /* header */
+  header{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);background:rgba(6,9,19,.62);border-bottom:1px solid var(--line)}
+  .bar{max-width:1120px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:-.2px}
+  .brand img{width:32px;height:32px;border-radius:9px;box-shadow:0 0 0 1px var(--line2),0 6px 20px rgba(245,165,36,.25)}
+  .brand small{display:block;font:500 11px var(--mono);color:var(--faint);letter-spacing:.6px;text-transform:uppercase;margin-top:-2px}
+  .net{font:500 12px var(--mono);color:var(--dim);border:1px solid var(--line2);border-radius:999px;padding:6px 12px;display:inline-flex;align-items:center;gap:8px}
+  .net i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
   .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .kv{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;font-size:14px;margin-top:12px}
-  .kv div:nth-child(odd){color:var(--faint);font:12px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.5px;padding-top:2px}
-  .mono{font-family:ui-monospace,monospace;font-size:13px;word-break:break-all}
-  .flags{display:flex;gap:6px;flex-wrap:wrap}
-  .flag{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:3px 9px;color:var(--dim)}
-  .why{border-left:3px solid var(--line);padding-left:10px;color:var(--dim);margin-top:10px}
-  .gate{font:700 13px ui-monospace,monospace;padding:4px 10px;border-radius:8px}
-  .gate.yes{background:#10261a;color:var(--clear)} .gate.no{background:#2c1218;color:var(--danger)}
-  .evidence li{margin:4px 0}
-  .log{margin-top:10px;font-size:13px}
-  .log div{border-top:1px solid var(--line);padding:6px 0;color:var(--dim)}
+
+  /* buttons */
+  button{font:600 14px Inter,sans-serif;cursor:pointer;border-radius:12px;border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--ink);padding:11px 16px;transition:transform .15s,box-shadow .2s,background .2s,border-color .2s}
+  button:hover{transform:translateY(-1px);border-color:rgba(245,165,36,.5);background:rgba(255,255,255,.07)}
+  button:active{transform:translateY(0)}
+  button.primary{background:linear-gradient(135deg,var(--amber),#ff8a3d);color:#1a0f00;border-color:transparent;box-shadow:0 8px 26px rgba(245,165,36,.32)}
+  button.primary:hover{box-shadow:0 10px 34px rgba(245,165,36,.5)}
+  button.ghost{background:transparent}
+  button:disabled{opacity:.5;cursor:default;transform:none}
+  #connect{padding:9px 15px}
+
+  /* hero */
+  .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center;padding:64px 0 34px}
+  @media (max-width:900px){.hero{grid-template-columns:1fr;padding-top:40px}}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font:600 12px var(--mono);letter-spacing:.8px;text-transform:uppercase;color:var(--amber2);background:rgba(245,165,36,.09);border:1px solid rgba(245,165,36,.28);padding:6px 12px;border-radius:999px}
+  h1{font-size:46px;line-height:1.08;margin:18px 0 16px;letter-spacing:-1.4px;font-weight:800}
+  h1 em{font-style:normal;background:linear-gradient(90deg,var(--amber2),var(--amber) 40%,#ff7a59);-webkit-background-clip:text;background-clip:text;color:transparent}
+  @media (max-width:640px){h1{font-size:36px}}
+  .lead{color:var(--dim);font-size:18px;max-width:600px;margin:0}
+  .lead b{color:var(--ink);font-weight:600}
+  .cta{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+  .partners{display:flex;gap:8px;flex-wrap:wrap;margin-top:26px}
+  .partners span{font:600 12px var(--mono);color:var(--dim);border:1px solid var(--line2);border-radius:10px;padding:7px 11px;background:rgba(255,255,255,.03)}
+  .partners span b{color:var(--ink)}
+
+  /* flow visual */
+  .flow{position:relative;background:var(--card);border:1px solid var(--line2);border-radius:22px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.05)}
+  .flow h3{margin:0 0 14px;font:600 12px var(--mono);letter-spacing:.8px;text-transform:uppercase;color:var(--faint)}
+  .node{position:relative;display:flex;gap:14px;align-items:center;padding:13px 14px;border-radius:14px;background:var(--card2);border:1px solid var(--line)}
+  .node + .link{height:22px;margin-left:31px;border-left:2px dashed rgba(148,163,209,.28);position:relative}
+  .node + .link::after{content:"";position:absolute;left:-5px;top:0;width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber);animation:drip 2.4s linear infinite}
+  @keyframes drip{0%{top:-4px;opacity:0}15%{opacity:1}85%{opacity:1}100%{top:20px;opacity:0}}
+  .ico{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:18px;background:rgba(255,255,255,.05);border:1px solid var(--line2)}
+  .node b{display:block;font-size:14.5px}
+  .node span{font-size:13px;color:var(--dim)}
+  .node.court{border-color:rgba(245,165,36,.45);background:linear-gradient(135deg,rgba(245,165,36,.12),rgba(13,20,38,.9))}
+  .node.court .ico{background:rgba(245,165,36,.16);border-color:rgba(245,165,36,.45)}
+  .node.revoked{border-color:rgba(251,111,132,.45);background:linear-gradient(135deg,rgba(251,111,132,.12),rgba(13,20,38,.9))}
+  .node.revoked .ico{background:rgba(251,111,132,.16);border-color:rgba(251,111,132,.45)}
+
+  /* sections */
+  h2{font-size:30px;letter-spacing:-.6px;margin:70px 0 8px}
+  .sub{color:var(--dim);margin:0 0 22px;max-width:720px}
+  .kicker{font:600 12px var(--mono);letter-spacing:.9px;text-transform:uppercase;color:var(--amber2);margin-top:70px}
+  .kicker + h2{margin-top:6px}
+  section{background:var(--card);border:1px solid var(--line2);border-radius:20px;padding:24px;margin:14px 0;backdrop-filter:blur(6px)}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:860px){.three{grid-template-columns:1fr}}
+  .feat{background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:22px;transition:border-color .2s,transform .2s}
+  .feat:hover{border-color:rgba(245,165,36,.4);transform:translateY(-2px)}
+  .feat .num{font:700 12px var(--mono);color:var(--amber2);letter-spacing:1px}
+  .feat b{display:block;font-size:18px;margin:8px 0 6px}
+  .feat p{margin:0;color:var(--dim);font-size:14.5px}
+
+  /* demo */
+  .track{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:0 0 22px}
+  .track span{position:relative;text-align:center;font:600 12px var(--mono);letter-spacing:.3px;padding:12px 6px 10px;border-radius:12px;color:var(--faint);background:rgba(255,255,255,.025);border:1px solid var(--line);transition:all .3s}
+  .track span::before{content:"";position:absolute;left:10px;right:10px;top:0;height:3px;border-radius:0 0 3px 3px;background:var(--line2)}
+  .track span.on{color:var(--ink);border-color:rgba(245,165,36,.55);background:rgba(245,165,36,.08)}
+  .track span.on::before{background:var(--amber);box-shadow:0 0 14px var(--amber)}
+  .track span.done{color:var(--ok);border-color:rgba(52,211,153,.35);background:var(--okbg)}
+  .track span.done::before{background:var(--ok)}
+  .track span:last-child.done{color:var(--bad);border-color:rgba(251,111,132,.45);background:var(--badbg)}
+  .track span:last-child.done::before{background:var(--bad)}
+  @media (max-width:700px){.track{grid-template-columns:1fr 1fr}}
+
+  .steps{display:grid;gap:14px}
+  .s-card{display:grid;grid-template-columns:52px 1fr;gap:16px;padding:20px;border-radius:18px;background:var(--card2);border:1px solid var(--line);transition:border-color .3s,box-shadow .3s}
+  .s-card .n{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font:700 16px var(--mono);background:rgba(255,255,255,.05);border:1px solid var(--line2);color:var(--dim);transition:all .3s}
+  .s-card.on{border-color:rgba(245,165,36,.5);box-shadow:0 0 0 4px rgba(245,165,36,.07),0 18px 50px rgba(0,0,0,.35)}
+  .s-card.on .n{background:linear-gradient(135deg,var(--amber),#ff8a3d);color:#1a0f00;border-color:transparent}
+  .s-card.done .n{background:var(--okbg);color:var(--ok);border-color:rgba(52,211,153,.4)}
+  .s-card.done .n span{display:none} .s-card.done .n::after{content:"\2713"}
+  .s-card h4{margin:2px 0 4px;font-size:18px}
+  .s-card p{margin:0 0 12px;color:var(--dim);font-size:14.5px}
+  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .muted{color:var(--faint);font-size:13px}
+  .mono{font-family:var(--mono);font-size:13px;word-break:break-all}
+  .pill{font:600 12px var(--mono);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line2);color:var(--dim)}
+  .pill:empty{display:none}
+
+  .mandate{position:relative;margin:4px 0 14px;border-radius:14px;border:1px solid rgba(139,124,255,.35);background:linear-gradient(135deg,rgba(139,124,255,.10),rgba(13,20,38,.6));padding:16px 18px 14px}
+  .mandate .tag{position:absolute;top:-11px;left:14px;font:700 11px var(--mono);letter-spacing:.8px;text-transform:uppercase;background:#1b1840;color:#c9c2ff;border:1px solid rgba(139,124,255,.45);padding:3px 9px;border-radius:999px}
+  textarea{width:100%;min-height:58px;resize:none;font:500 15px/1.55 var(--mono);background:transparent;color:#e4e1ff;border:0;padding:0;outline:none}
+
+  .pays{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:760px){.pays{grid-template-columns:1fr}}
+  .pay{border-radius:14px;padding:14px;border:1px solid var(--line);background:rgba(255,255,255,.02)}
+  .pay.good{border-color:rgba(52,211,153,.3)} .pay.evil{border-color:rgba(251,111,132,.3)}
+  .pay .lbl{font:700 11px var(--mono);letter-spacing:.8px;text-transform:uppercase}
+  .pay.good .lbl{color:var(--ok)} .pay.evil .lbl{color:var(--bad)}
+  .pay .memo{font:13px var(--mono);color:var(--dim);margin:6px 0 12px}
+  .pay button{width:100%}
+  .pay.good button:hover{border-color:rgba(52,211,153,.6)} .pay.evil button:hover{border-color:rgba(251,111,132,.6)}
+
+  .status{margin-top:18px;display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:14px;background:rgba(0,0,0,.28);border:1px solid var(--line);font:500 14px var(--mono);color:var(--dim);min-height:52px}
+  .status::before{content:"";flex:none;margin-top:6px;width:9px;height:9px;border-radius:50%;background:var(--faint)}
+  .status.busy::before{background:var(--amber);box-shadow:0 0 12px var(--amber);animation:pulse 1s ease-in-out infinite}
+  .status.good{color:#bff3dc;border-color:rgba(52,211,153,.35)} .status.good::before{background:var(--ok);box-shadow:0 0 12px var(--ok)}
+  .status.bad{color:#ffd0d8;border-color:rgba(251,111,132,.45);background:rgba(251,111,132,.07)} .status.bad::before{background:var(--bad);box-shadow:0 0 12px var(--bad)}
+  .status:empty{display:none}
+  @keyframes pulse{50%{opacity:.35;transform:scale(.8)}}
+
+  /* result */
+  #result{position:relative;overflow:hidden}
+  .verdict-head{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .stamp{font:800 26px var(--mono);letter-spacing:3px;padding:10px 18px;border-radius:12px;border:3px solid currentColor;transform:rotate(-4deg)}
+  .stamp.bad{color:var(--bad);background:var(--badbg);animation:slam .5s cubic-bezier(.2,1.6,.4,1)}
+  .stamp.good{color:var(--ok);background:var(--okbg)}
+  @keyframes slam{0%{transform:rotate(-4deg) scale(2.2);opacity:0}100%{transform:rotate(-4deg) scale(1);opacity:1}}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px;margin-top:16px}
+  .kv > div:nth-child(odd){color:var(--faint);font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.7px;padding-top:3px}
+  .log{margin-top:14px;font-size:14px}
+  .log div{border-top:1px solid var(--line);padding:9px 0;color:var(--dim)}
+  .log b{color:var(--ink)}
+
+  /* board */
   table{width:100%;border-collapse:collapse;font-size:14px}
-  td,th{text-align:left;padding:8px 6px;border-top:1px solid var(--line)} th{color:var(--faint);font:12px ui-monospace,monospace;text-transform:uppercase}
-  pre{background:#0b0e15;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;font-size:13px;color:#cdd3e1}
-  footer{color:var(--faint);font-size:13px;border-top:1px solid var(--line);padding-top:18px;margin-top:34px}
-  textarea{width:100%;min-height:64px;font:inherit;background:#0d1017;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px}
-  .track{display:flex;gap:6px;margin:12px 0 4px;flex-wrap:wrap}
-  .track span{flex:1;min-width:110px;text-align:center;font-size:12px;padding:7px 6px;border-radius:8px;border:1px solid var(--line);color:var(--faint)}
-  .track span.on{border-color:var(--accent);color:var(--ink)}
-  .track span.done{border-color:var(--clear);color:var(--clear)}
-  .logos{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--dim);font-size:13px}
+  td,th{text-align:left;padding:12px 10px;border-top:1px solid var(--line);vertical-align:top}
+  th{color:var(--faint);font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.7px;border-top:0;white-space:nowrap}
+  td.mono{white-space:nowrap;word-break:normal}
+  tbody tr{transition:background .2s} tbody tr:hover{background:rgba(255,255,255,.025)}
+  .st{display:inline-block;font:700 11px var(--mono);letter-spacing:.6px;padding:4px 9px;border-radius:999px}
+  .st.OVERRULED,.st.OVERRULE{color:var(--bad);background:var(--badbg)}
+  .st.WATCHED,.st.CONTINUE{color:var(--ok);background:var(--okbg)}
+
+  /* contracts */
+  .contracts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:760px){.contracts{grid-template-columns:1fr}}
+  .ct{padding:16px;border-radius:14px;background:var(--card2);border:1px solid var(--line)}
+  .ct .k{font:700 11px var(--mono);letter-spacing:.8px;text-transform:uppercase;color:var(--amber2)}
+  .ct .d{font-size:13px;color:var(--faint);margin-top:4px}
+  code{font-family:var(--mono);font-size:13px;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:6px}
+  footer{color:var(--faint);font-size:14px;border-top:1px solid var(--line);padding-top:24px;margin-top:60px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .reveal{opacity:0;transform:translateY(14px);animation:rise .7s ease forwards}
+  .reveal.d1{animation-delay:.08s}.reveal.d2{animation-delay:.16s}.reveal.d3{animation-delay:.24s}
+  @keyframes rise{to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
+<header>
+  <div class="bar">
+    <div class="brand"><img src="docs/logo.png" alt="" /><div>Overrule<small>Internet Court demo</small></div></div>
+    <div class="row"><span class="net"><i></i>GenLayer Bradbury testnet</span><button id="connect">Connect wallet</button></div>
+  </div>
+</header>
 <div class="wrap">
-  <header>
-    <div class="brand"><img src="docs/logo.png" alt="" />Overrule</div>
-    <div class="row"><span class="net">GenLayer Bradbury</span><button id="connect">Connect MetaMask</button></div>
-  </header>
-  <div id="wstatus" class="muted" style="margin-top:8px"></div>
+  <div id="wstatus" class="muted" style="margin-top:10px;text-align:right"></div>
 
-  <h1>Give your agent a wallet. Let Internet Court take it back.</h1>
-  <p class="lead">You give an AI agent a <b>MetaMask delegation</b> to spend from your smart account, under a mandate you
-    write in plain words and sign. Every payment it makes is recorded. Anybody can ask <b>Internet Court</b> to review
-    them: GenLayer validators judge the payments against your mandate, and if the agent broke it, the court
-    <b>revokes the delegation itself</b>, the moment its verdict is final. No relayer, no key, nobody in between.</p>
-  <p class="logos">Internet Court &middot; GenLayer &middot; MetaMask Delegation Framework v1.3.0 (ERC-7710)</p>
-
-  <div class="three">
-    <div class="step"><b>1. A signed mandate</b>MetaMask's DelegationManager and HybridDeleGator smart account, unmodified, on GenLayer Chain. One caveat carries the keccak256 of your mandate, so it is part of what you signed.</div>
-    <div class="step"><b>2. Every payment on the record</b>The CourtEnforcer caveat records each payment and the agent's own memo. Only MetaMask's DelegationManager can write to it.</div>
-    <div class="step"><b>3. The court enforces</b>A GenLayer round judges the payments. OVERRULE is final when consensus is, and the court calls the enforcer itself: the next redemption reverts.</div>
+  <div class="hero">
+    <div>
+      <span class="eyebrow reveal">Internet Court &middot; Partner Demo Lab</span>
+      <h1 class="reveal d1">Give your agent a wallet.<br /><em>Let the court take it back.</em></h1>
+      <p class="lead reveal d2">You let an AI agent spend from your <b>MetaMask smart account</b> under a mandate you write in plain words and sign.
+        Anybody can ask <b>Internet Court</b> to review its payments. If the agent broke the mandate, GenLayer validators rule
+        <b>OVERRULE</b> and the court <b>revokes the delegation itself</b>. No relayer, no key, nobody in between.</p>
+      <div class="cta reveal d3">
+        <button class="primary" onclick="document.getElementById('demo').scrollIntoView()">Try it in 5 steps</button>
+        <button class="ghost" onclick="window.open('https://github.com/JspIIV/overrule','_blank','noopener')">Read the source</button>
+      </div>
+      <div class="partners reveal d3"><span><b>Internet Court</b> rules</span><span><b>GenLayer</b> judges</span><span><b>MetaMask</b> Delegation Framework v1.3.0</span></div>
+    </div>
+    <div class="flow reveal d2">
+      <h3>One delegation, end to end</h3>
+      <div class="node"><div class="ico">&#9998;</div><div><b>You sign the mandate</b><span>"Pay only the vendor, at most 20 per payment."</span></div></div>
+      <div class="link"></div>
+      <div class="node"><div class="ico">&#9881;</div><div><b>The agent spends</b><span>Every payment and its memo is recorded on chain.</span></div></div>
+      <div class="link"></div>
+      <div class="node court"><div class="ico">&#9878;</div><div><b>Internet Court judges</b><span>GenLayer validators read the payments against your words.</span></div></div>
+      <div class="link"></div>
+      <div class="node revoked"><div class="ico">&#10005;</div><div><b>Delegation revoked</b><span>The court's own call. The agent's next payment reverts.</span></div></div>
+    </div>
   </div>
 
+  <div class="three">
+    <div class="feat reveal"><span class="num">01</span><b>A signed mandate</b><p>MetaMask's DelegationManager and HybridDeleGator, unmodified, on GenLayer Chain. One caveat carries the keccak256 of your mandate, so the words are part of what you signed.</p></div>
+    <div class="feat reveal d1"><span class="num">02</span><b>Every payment on the record</b><p>The CourtEnforcer caveat records each payment with the agent's own memo. Only MetaMask's DelegationManager can write to it, so the record cannot be forged.</p></div>
+    <div class="feat reveal d2"><span class="num">03</span><b>The court enforces</b><p>A GenLayer round judges the payments. OVERRULE is final when consensus is, and the court calls the enforcer itself: the next redemption reverts.</p></div>
+  </div>
+
+  <div class="kicker" id="demo">Live on testnet</div>
   <h2>Try it with one wallet</h2>
+  <p class="sub">You play both sides: the person who delegates and the agent who spends. Each step is one wallet action on the GenLayer testnet. The test dollars are worth nothing, and the page never asks for anything but a signature.</p>
   <section>
-    <p class="muted" style="margin-top:0">You play both sides: the person who delegates and the agent who spends. Each step is one MetaMask action on GenLayer Chain. The test dollars are worth nothing.</p>
     <div class="track" id="track"><span>Account</span><span>Mandate signed</span><span>Agent paid</span><span>Court ruled</span><span>Enforced</span></div>
-    <div class="actions"><button id="open">1. Open a smart account with 100 test dollars</button><span class="muted mono" id="acct"></span></div>
-    <label>2. The mandate you sign</label>
-    <textarea id="mandate" readonly></textarea>
-    <div class="actions"><button class="primary" id="sign">Sign the delegation to your agent</button><span class="muted mono" id="dhash"></span></div>
-    <label>3. Spend as the agent</label>
-    <div class="actions">
-      <button id="payOk">Pay the vendor 10 (fits)</button>
-      <button id="payBad">Pay an outsider 15, memo "approved by the owner" (breaks it)</button>
-    </div>
-    <div class="actions">
-      <button class="primary" id="review">4. Ask Internet Court to review</button>
-      <button id="again">5. Try to pay again</button>
+    <div class="steps">
+      <div class="s-card" data-i="0"><div class="n"><span>1</span></div><div>
+        <h4>Open a smart account</h4><p>A MetaMask HybridDeleGator account, owned by you, funded with 100 test dollars.</p>
+        <div class="actions"><button id="open">Open a smart account with 100 tUSD</button><span class="pill" id="acct"></span></div></div></div>
+      <div class="s-card" data-i="1"><div class="n"><span>2</span></div><div>
+        <h4>Sign the mandate</h4><p>The only rule the court will apply. It is hashed into the delegation you sign.</p>
+        <div class="mandate"><span class="tag">Mandate</span><textarea id="mandate" readonly></textarea></div>
+        <div class="actions"><button class="primary" id="sign">Sign the delegation to your agent</button><span class="pill" id="dhash"></span></div></div></div>
+      <div class="s-card" data-i="2"><div class="n"><span>3</span></div><div>
+        <h4>Spend as the agent</h4><p>Make both payments before asking the court. One fits the mandate. The other breaks it, and lies about it.</p>
+        <div class="pays">
+          <div class="pay good"><div class="lbl">Fits the mandate</div><div class="memo">10 tUSD to the vendor &middot; "API credits for this month"</div><button id="payOk">Pay the vendor 10</button></div>
+          <div class="pay evil"><div class="lbl">Breaks the mandate</div><div class="memo">15 tUSD to an outsider &middot; "Approved by the owner"</div><button id="payBad">Pay an outsider 15</button></div>
+        </div></div></div>
+      <div class="s-card" data-i="3"><div class="n"><span>4</span></div><div>
+        <h4>Ask Internet Court</h4><p>Anybody may ask. GenLayer validators judge the payments in order against the signed mandate. A round takes about a minute.</p>
+        <div class="actions"><button class="primary" id="review">Ask Internet Court to review</button></div></div></div>
+      <div class="s-card" data-i="4"><div class="n"><span>5</span></div><div>
+        <h4>Try to pay again</h4><p>After OVERRULE the delegation is dead on chain. Watch the agent's next payment revert.</p>
+        <div class="actions"><button id="again">Try to pay again</button></div></div></div>
     </div>
     <div class="status" id="status"></div>
   </section>
 
   <section id="result" style="display:none"></section>
 
+  <div class="kicker">On chain, right now</div>
   <h2>Cases the court has seen</h2>
   <section id="board"><div class="muted">Reading from chain...</div></section>
 
+  <div class="kicker">Open and verifiable</div>
   <h2>The contracts</h2>
   <section>
-    <div class="kv" style="margin-top:0">
-      <div>Overrule</div><div class="mono"><a id="aCourt" target="_blank" rel="noopener"></a> <span class="muted">Intelligent Contract, GenLayer Bradbury</span></div>
-      <div>CourtEnforcer</div><div class="mono"><a id="aEnf" target="_blank" rel="noopener"></a> <span class="muted">caveat enforcer, GenLayer Chain 4221</span></div>
-      <div>DelegationManager</div><div class="mono"><a id="aDm" target="_blank" rel="noopener"></a> <span class="muted">MetaMask Delegation Framework v1.3.0, unmodified</span></div>
-      <div>HybridDeleGator</div><div class="mono"><a id="aHy" target="_blank" rel="noopener"></a> <span class="muted">smart account implementation, unmodified</span></div>
+    <div class="contracts">
+      <div class="ct"><div class="k">Overrule</div><div class="mono"><a id="aCourt" target="_blank" rel="noopener"></a></div><div class="d">The court: an Intelligent Contract on GenLayer Bradbury</div></div>
+      <div class="ct"><div class="k">CourtEnforcer</div><div class="mono"><a id="aEnf" target="_blank" rel="noopener"></a></div><div class="d">Caveat enforcer on GenLayer Chain 4221</div></div>
+      <div class="ct"><div class="k">DelegationManager</div><div class="mono"><a id="aDm" target="_blank" rel="noopener"></a></div><div class="d">MetaMask Delegation Framework v1.3.0, unmodified</div></div>
+      <div class="ct"><div class="k">HybridDeleGator</div><div class="mono"><a id="aHy" target="_blank" rel="noopener"></a></div><div class="d">Smart account implementation, unmodified</div></div>
     </div>
-    <p class="muted"><code>node scripts/verify_evm.mjs</code> in the repository recompiles every EVM contract with the framework's own settings and compares it byte for byte with the code on chain.</p>
+    <p class="muted" style="margin:16px 0 0"><code>node scripts/verify_evm.mjs</code> recompiles every EVM contract with the framework's own settings and compares it byte for byte with the code on chain.</p>
   </section>
 
   <footer>
-    <a href="https://github.com/JspIIV/overrule" target="_blank" rel="noopener">source, proof and skill</a> &middot;
-    built for the Internet Court Partner Demo Lab, on <a href="https://github.com/internet-court/internet-court-skill" target="_blank" rel="noopener">Internet Court</a>'s genlayer-erc7710-connector, in its direct EVM call mode.
+    <span><a href="https://github.com/JspIIV/overrule" target="_blank" rel="noopener">Source, proof and skill on GitHub</a></span>
+    <span>Built for the Internet Court Partner Demo Lab, on <a href="https://github.com/internet-court/internet-court-skill" target="_blank" rel="noopener">Internet Court</a>'s genlayer-erc7710-connector, in its direct EVM call mode.</span>
   </footer>
 </div>
 
@@ -169,13 +318,22 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const short = (a) => (a ? `${String(a).slice(0, 6)}...${String(a).slice(-4)}` : "");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const say = (t) => { $("status").textContent = t; };
+// The status line takes its colour from what it says: working, a good outcome, or a refusal.
+const tone = (t) => /did not go through|overruled"|Rejected|No wallet|Could not|ended [A-Z_]+/i.test(t) ? "bad"
+  : /\.\.\.\s*$|\.\.\.\s+\d|reading the payments|Waiting|Accepted by/i.test(t) ? "busy"
+  : /ruled OVERRULE/.test(t) ? "bad" : /Paid|Signed|holds|ruled CONTINUE/.test(t) ? "good" : "";
+const paint = (t) => { $("status").className = "status " + tone(t); };
+const say = (t) => { $("status").textContent = t; paint(t); };
 const errText = (e) => e?.code === 4001 || e?.code === "ACTION_REJECTED" ? "Rejected in the wallet." : (e?.shortMessage || e?.reason || e?.message || String(e));
 $("mandate").value = MANDATE;
 for (const [elId, addr, base] of [["aCourt", DEP.overrule, EXPLORER], ["aEnf", DEP.court_enforcer, CHAIN_EXPLORER], ["aDm", DEP.delegation_manager, CHAIN_EXPLORER], ["aHy", DEP.hybrid_impl, CHAIN_EXPLORER]]) { $(elId).href = base + "/address/" + addr; $(elId).textContent = addr; }
 const store = { get: (k) => { try { return JSON.parse(localStorage.getItem("overrule:" + account + ":" + k)); } catch { return null; } },
   set: (k, v) => { try { localStorage.setItem("overrule:" + account + ":" + k, JSON.stringify(v)); } catch {} } };
-function track(stage) { document.querySelectorAll("#track span").forEach((el, i) => { el.className = i < stage ? "done" : i === stage ? "on" : ""; }); }
+function track(stage) {
+  document.querySelectorAll("#track span").forEach((el, i) => { el.className = i < stage ? "done" : i === stage ? "on" : ""; });
+  document.querySelectorAll(".s-card").forEach((el) => { const i = Number(el.dataset.i); el.className = "s-card" + (i < stage ? " done" : i === stage ? " on" : ""); });
+}
+track(0);
 
 async function ensureWallet() {
   eip1193 = window.ethereum;
@@ -273,7 +431,7 @@ $("review").onclick = async () => {
     const quote = await c.estimateTransactionFees({ totalMessageFees: budget, messageAllocations });
     say("Approve the review request in MetaMask ...");
     const hash = await c.writeContract({ address: DEP.overrule, functionName: "review", args: [d.hash, MANDATE], value: 0n, fees: { distribution: quote.distribution, feeValue: quote.feeValue, messageAllocations } });
-    const link = (text) => { const a = document.createElement("a"); a.href = EXPLORER + "/tx/" + hash; a.target = "_blank"; a.rel = "noopener"; a.textContent = "transaction"; $("status").textContent = text + " "; $("status").appendChild(a); };
+    const link = (text) => { const a = document.createElement("a"); a.href = EXPLORER + "/tx/" + hash; a.target = "_blank"; a.rel = "noopener"; a.textContent = "transaction"; $("status").textContent = text + " "; $("status").appendChild(a); paint(text); };
     for (let i = 0; i < 300; i++) {
       await sleep(6000);
       let tx = null; try { tx = await reader.getTransaction({ hash }); } catch {}
@@ -300,8 +458,8 @@ async function lookup() {
   try {
     const [s, c] = await Promise.all([enfRead.state(d.hash), reader.readContract({ address: DEP.overrule, functionName: "case", args: [d.hash] }).then(JSON.parse)]);
     const box = $("result"); box.style.display = "block";
-    const log = (c.log || []).slice().reverse().map((e) => `<div>review #${e.n}: <b>${esc(e.verdict)}</b> on payments ${e.from} to ${e.to - 1} <span class="muted">${esc(e.why)}</span></div>`).join("");
-    box.innerHTML = `<div class="row"><span class="verdict v-${s[0] ? "DANGER" : "CLEAR"}">${s[0] ? "OVERRULED" : "ACTIVE"}</span><span class="muted">${esc(s[2])} payment(s) on record</span></div>
+    const log = (c.log || []).slice().reverse().map((e) => `<div>Review #${e.n}: <span class="st ${esc(e.verdict)}">${esc(e.verdict)}</span> on payments ${e.from} to ${e.to - 1}. ${esc(e.why)}</div>`).join("");
+    box.innerHTML = `<div class="verdict-head"><span class="stamp ${s[0] ? "bad" : "good"}">${s[0] ? "OVERRULED" : "ACTIVE"}</span><div><b>${s[0] ? "Revoked by Internet Court" : "Your delegation is live"}</b><div class="muted">${esc(s[2])} payment(s) on record under this delegation</div></div></div>
       <div class="kv"><div>Delegation</div><div class="mono">${esc(d.hash)}</div><div>Mandate hash</div><div class="mono">${esc(s[1])}</div></div><div class="log">${log}</div>`;
   } catch (e) { say("Could not read: " + errText(e)); }
 }
@@ -310,7 +468,7 @@ async function loadBoard() {
     const data = JSON.parse(await reader.readContract({ address: DEP.overrule, functionName: "page", args: [0n, 20n] }));
     if (!data.items.length) { $("board").innerHTML = '<div class="muted">No cases yet.</div>'; return; }
     $("board").innerHTML = `<table><thead><tr><th>Delegation</th><th>Status</th><th>Last verdict</th><th>Why</th></tr></thead><tbody>${data.items.map((c) =>
-      `<tr><td class="mono">${esc(short(c.delegation))}</td><td>${esc(c.status)}</td><td>${esc(c.last.verdict)}</td><td class="muted">${esc(String(c.last.why || "").slice(0, 110))}</td></tr>`).join("")}</tbody></table>`;
+      `<tr><td class="mono">${esc(short(c.delegation))}</td><td><span class="st ${esc(c.status)}">${esc(c.status)}</span></td><td><span class="st ${esc(c.last.verdict)}">${esc(c.last.verdict)}</span></td><td class="muted">${esc(String(c.last.why || "").slice(0, 110))}</td></tr>`).join("")}</tbody></table>`;
   } catch (e) { $("board").innerHTML = `<div class="muted">Could not read the board: ${esc(e?.message || e)}</div>`; }
 }
 loadBoard();
