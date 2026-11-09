@@ -1,0 +1,20 @@
+{
+  "name": "overrule",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "ethers": "^6.17.0",
+    "genlayer-js": "^2.0.0-rc.2",
+    "solc": "^0.8.36"
+  },
+  "version": "1.0.0",
+  "description": "Overrule: Internet Court for MetaMask delegations. A GenLayer verdict revokes an AI agent's ERC-7710 delegation itself, with no relayer",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JspIIV/overrule.git"
+  },
+  "scripts": {
+    "test": "python tests/overrule_rules.py"
+  }
+}

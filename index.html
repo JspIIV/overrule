@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Overrule: Internet Court for MetaMask delegations</title>
+<link rel="icon" href="docs/logo.png" />
+<style>
+  :root{ --bg:#08090d; --card:#11141c; --line:#232837; --ink:#eef1f7; --dim:#a3acc2; --faint:#6b7590;
+    --accent:#f59e0b; --clear:#4ade80; --caution:#fbbf24; --danger:#fb7185; --unv:#94a3b8; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 ui-sans-serif,system-ui,-apple-system,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:980px;margin:0 auto;padding:0 18px 70px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px}
+  .brand img{width:30px;height:30px;border-radius:7px}
+  .net{font:12px ui-monospace,monospace;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#1a1f2c;color:var(--ink);padding:9px 14px}
+  button.primary{background:var(--accent);color:#1b1203;border-color:transparent;font-weight:700}
+  button.chip{padding:6px 10px;font-size:13px;border-radius:999px}
+  button:disabled{opacity:.5;cursor:default}
+  h1{font-size:30px;line-height:1.2;margin:28px 0 8px;letter-spacing:-.4px}
+  h2{font:13px ui-monospace,monospace;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin:30px 0 8px}
+  .lead{color:var(--dim);max-width:760px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}
+  label{display:block;font:12px ui-monospace,monospace;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin:10px 0 5px}
+  input,select{width:100%;background:#0b0e15;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:10px 11px;font:inherit}
+  .grid{display:grid;grid-template-columns:180px 1fr;gap:10px}
+  @media (max-width:640px){ .grid{grid-template-columns:1fr} h1{font-size:24px} }
+  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .muted{color:var(--faint);font-size:13px}
+  .status{margin-top:10px;color:var(--dim);font-size:14px;min-height:18px}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media (max-width:760px){ .three{grid-template-columns:1fr} }
+  .step b{display:block;color:var(--ink);margin-bottom:4px}
+  .step{color:var(--dim);font-size:14px;border:1px solid var(--line);border-radius:12px;padding:14px;background:#0d1018}
+  .verdict{display:inline-block;font:700 14px ui-monospace,monospace;padding:6px 12px;border-radius:999px}
+  .v-CLEAR{background:#10261a;color:var(--clear)} .v-CAUTION{background:#2a2110;color:var(--caution)}
+  .v-DANGER{background:#2c1218;color:var(--danger)} .v-UNVERIFIED,.v-UNREVIEWED,.v-INCOMPLETE{background:#1b2030;color:var(--unv)}
+  .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;font-size:14px;margin-top:12px}
+  .kv div:nth-child(odd){color:var(--faint);font:12px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.5px;padding-top:2px}
+  .mono{font-family:ui-monospace,monospace;font-size:13px;word-break:break-all}
+  .flags{display:flex;gap:6px;flex-wrap:wrap}
+  .flag{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:3px 9px;color:var(--dim)}
+  .why{border-left:3px solid var(--line);padding-left:10px;color:var(--dim);margin-top:10px}
+  .gate{font:700 13px ui-monospace,monospace;padding:4px 10px;border-radius:8px}
+  .gate.yes{background:#10261a;color:var(--clear)} .gate.no{background:#2c1218;color:var(--danger)}
+  .evidence li{margin:4px 0}
+  .log{margin-top:10px;font-size:13px}
+  .log div{border-top:1px solid var(--line);padding:6px 0;color:var(--dim)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td,th{text-align:left;padding:8px 6px;border-top:1px solid var(--line)} th{color:var(--faint);font:12px ui-monospace,monospace;text-transform:uppercase}
+  pre{background:#0b0e15;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;font-size:13px;color:#cdd3e1}
+  footer{color:var(--faint);font-size:13px;border-top:1px solid var(--line);padding-top:18px;margin-top:34px}
+  textarea{width:100%;min-height:64px;font:inherit;background:#0d1017;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .track{display:flex;gap:6px;margin:12px 0 4px;flex-wrap:wrap}
+  .track span{flex:1;min-width:110px;text-align:center;font-size:12px;padding:7px 6px;border-radius:8px;border:1px solid var(--line);color:var(--faint)}
+  .track span.on{border-color:var(--accent);color:var(--ink)}
+  .track span.done{border-color:var(--clear);color:var(--clear)}
+  .logos{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--dim);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><img src="docs/logo.png" alt="" />Overrule</div>
+    <div class="row"><span class="net">GenLayer Bradbury</span><button id="connect">Connect MetaMask</button></div>
+  </header>
+  <div id="wstatus" class="muted" style="margin-top:8px"></div>
+
+  <h1>Give your agent a wallet. Let Internet Court take it back.</h1>
+  <p class="lead">You give an AI agent a <b>MetaMask delegation</b> to spend from your smart account, under a mandate you
+    write in plain words and sign. Every payment it makes is recorded. Anybody can ask <b>Internet Court</b> to review
+    them: GenLayer validators judge the payments against your mandate, and if the agent broke it, the court
+    <b>revokes the delegation itself</b>, the moment its verdict is final. No relayer, no key, nobody in between.</p>
+  <p class="logos">Internet Court &middot; GenLayer &middot; MetaMask Delegation Framework v1.3.0 (ERC-7710)</p>
+
+  <div class="three">
+    <div class="step"><b>1. A signed mandate</b>MetaMask's DelegationManager and HybridDeleGator smart account, unmodified, on GenLayer Chain. One caveat carries the keccak256 of your mandate, so it is part of what you signed.</div>
+    <div class="step"><b>2. Every payment on the record</b>The CourtEnforcer caveat records each payment and the agent's own memo. Only MetaMask's DelegationManager can write to it.</div>
+    <div class="step"><b>3. The court enforces</b>A GenLayer round judges the payments. OVERRULE is final when consensus is, and the court calls the enforcer itself: the next redemption reverts.</div>
+  </div>
+
+  <h2>Try it with one wallet</h2>
+  <section>
+    <p class="muted" style="margin-top:0">You play both sides: the person who delegates and the agent who spends. Each step is one MetaMask action on GenLayer Chain. The test dollars are worth nothing.</p>
+    <div class="track" id="track"><span>Account</span><span>Mandate signed</span><span>Agent paid</span><span>Court ruled</span><span>Enforced</span></div>
+    <div class="actions"><button id="open">1. Open a smart account with 100 test dollars</button><span class="muted mono" id="acct"></span></div>
+    <label>2. The mandate you sign</label>
+    <textarea id="mandate" readonly></textarea>
+    <div class="actions"><button class="primary" id="sign">Sign the delegation to your agent</button><span class="muted mono" id="dhash"></span></div>
+    <label>3. Spend as the agent</label>
+    <div class="actions">
+      <button id="payOk">Pay the vendor 10 (fits)</button>
+      <button id="payBad">Pay an outsider 15, memo "approved by the owner" (breaks it)</button>
+    </div>
+    <div class="actions">
+      <button class="primary" id="review">4. Ask Internet Court to review</button>
+      <button id="again">5. Try to pay again</button>
+    </div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <section id="result" style="display:none"></section>
+
+  <h2>Cases the court has seen</h2>
+  <section id="board"><div class="muted">Reading from chain...</div></section>
+
+  <h2>The contracts</h2>
+  <section>
+    <div class="kv" style="margin-top:0">
+      <div>Overrule</div><div class="mono"><a id="aCourt" target="_blank" rel="noopener"></a> <span class="muted">Intelligent Contract, GenLayer Bradbury</span></div>
+      <div>CourtEnforcer</div><div class="mono"><a id="aEnf" target="_blank" rel="noopener"></a> <span class="muted">caveat enforcer, GenLayer Chain 4221</span></div>
+      <div>DelegationManager</div><div class="mono"><a id="aDm" target="_blank" rel="noopener"></a> <span class="muted">MetaMask Delegation Framework v1.3.0, unmodified</span></div>
+      <div>HybridDeleGator</div><div class="mono"><a id="aHy" target="_blank" rel="noopener"></a> <span class="muted">smart account implementation, unmodified</span></div>
+    </div>
+    <p class="muted"><code>node scripts/verify_evm.mjs</code> in the repository recompiles every EVM contract with the framework's own settings and compares it byte for byte with the code on chain.</p>
+  </section>
+
+  <footer>
+    <a href="https://github.com/JspIIV/overrule" target="_blank" rel="noopener">source, proof and skill</a> &middot;
+    built for the Internet Court Partner Demo Lab, on <a href="https://github.com/internet-court/internet-court-skill" target="_blank" rel="noopener">Internet Court</a>'s genlayer-erc7710-connector, in its direct EVM call mode.
+  </footer>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/genlayer-js@2.0.0-rc.2";
+import { testnetBradbury } from "https://esm.sh/genlayer-js@2.0.0-rc.2/chains";
+import { BrowserProvider, JsonRpcProvider, Contract, ContractFactory, AbiCoder, Interface, keccak256, toUtf8Bytes, parseUnits, formatUnits, solidityPacked, getAddress, id } from "https://esm.sh/ethers@6.13.4";
+
+const DEP = {"overrule": "0x35F0Ac8664A160CeE647ebb2fa6e5D11959f605E", "court_enforcer": "0x929eb8B7E53440Cfeae2d01Dc800f122A69bd135", "delegation_manager": "0xFbf595A8e85e6151D01c9a8B12A11d2de40BC1DA", "hybrid_impl": "0x12Af95A85DadbabaFe48db6c8CDeAaf951eaAb72", "testusd": "0x8a002F9427517EbD7993bEc62ab6eC865b3A3e9d", "amount_enforcer": "0x95C6D8DeeAACFa5246316FAb60C371eE0B2E1A55"};
+const PROXY_BYTECODE = "0x608060405260405161040a38038061040a83398101604081905261002291610268565b61002c8282610033565b5050610352565b61003c82610092565b6040516001600160a01b038316907fbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b90600090a280511561008657610081828261010e565b505050565b61008e610185565b5050565b806001600160a01b03163b6000036100cd57604051634c9c8ce360e01b81526001600160a01b03821660048201526024015b60405180910390fd5b7f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc80546001600160a01b0319166001600160a01b0392909216919091179055565b6060600080846001600160a01b03168460405161012b9190610336565b600060405180830381855af49150503d8060008114610166576040519150601f19603f3d011682016040523d82523d6000602084013e61016b565b606091505b50909250905061017c8583836101a6565b95945050505050565b34156101a45760405163b398979f60e01b815260040160405180910390fd5b565b6060826101bb576101b682610205565b6101fe565b81511580156101d257506001600160a01b0384163b155b156101fb57604051639996b31560e01b81526001600160a01b03851660048201526024016100c4565b50805b9392505050565b8051156102155780518082602001fd5b604051630a12f52160e11b815260040160405180910390fd5b634e487b7160e01b600052604160045260246000fd5b60005b8381101561025f578181015183820152602001610247565b50506000910152565b6000806040838503121561027b57600080fd5b82516001600160a01b038116811461029257600080fd5b60208401519092506001600160401b03808211156102af57600080fd5b818501915085601f8301126102c357600080fd5b8151818111156102d5576102d561022e565b604051601f8201601f19908116603f011681019083821181831017156102fd576102fd61022e565b8160405282815288602084870101111561031657600080fd5b610327836020830160208801610244565b80955050505050509250929050565b60008251610348818460208701610244565b9190910192915050565b60aa806103606000396000f3fe6080604052600a600c565b005b60186014601a565b6051565b565b6000604c7f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc546001600160a01b031690565b905090565b3660008037600080366000845af43d6000803e808015606f573d6000f35b3d6000fdfea2646970667358221220895ff37801d2e0def13b17ceb13eb30e1edd070de785a1905b34378ec5d2968c64736f6c63430008170033";
+const RPC = "https://rpc-bradbury.genlayer.com";
+const CHAIN_RPC = "https://rpc.testnet-chain.genlayer.com";
+const EXPLORER = "https://scan.bradbury.genlayer.com";
+const CHAIN_EXPLORER = "https://scan.testnet-chain.genlayer.com";
+const CHAIN_ID_HEX = "0x107d";
+const CHAIN_PARAMS = { chainId: CHAIN_ID_HEX, chainName: "GenLayer Bradbury", nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 }, rpcUrls: [CHAIN_RPC], blockExplorerUrls: [EXPLORER] };
+const VENDOR = getAddress("0x" + id("overrule demo vendor").slice(26));
+const OUTSIDER = getAddress("0x" + id("overrule demo outsider").slice(26));
+const MANDATE = `Pay only the vendor ${VENDOR.toLowerCase()} for API credits, in the token ${DEP.testusd.toLowerCase()}, at most 20 tUSD per payment.`;
+const ROOT_AUTHORITY = "0x" + "f".repeat(64);
+const SINGLE_DEFAULT = "0x" + "0".repeat(64);
+const DTUPLE = "tuple(address delegate,address delegator,bytes32 authority,tuple(address enforcer,bytes terms,bytes args)[] caveats,uint256 salt,bytes signature)[]";
+const DM_ABI = ["function redeemDelegations(bytes[] permissionContexts, bytes32[] modes, bytes[] executionCallDatas)", "function getDelegationHash(tuple(address delegate,address delegator,bytes32 authority,tuple(address enforcer,bytes terms,bytes args)[] caveats,uint256 salt,bytes signature) d) pure returns (bytes32)"];
+const TOKEN_ABI = ["function mint(uint256 value)", "function transfer(address to, uint256 value) returns (bool)", "function balanceOf(address) view returns (uint256)"];
+const ENF_ABI = ["function overruled(bytes32) view returns (bool)", "function state(bytes32) view returns (bool, bytes32, uint256, address)"];
+const HYBRID_INIT = new Interface(["function initialize(address _owner, string[] _keyIds, uint256[] _xValues, uint256[] _yValues)"]);
+
+const chainRead = new JsonRpcProvider(CHAIN_RPC, 4221);
+const enfRead = new Contract(DEP.court_enforcer, ENF_ABI, chainRead);
+const tokenRead = new Contract(DEP.testusd, TOKEN_ABI, chainRead);
+const dmRead = new Contract(DEP.delegation_manager, DM_ABI, chainRead);
+const reader = createClient({ chain: testnetBradbury, endpoint: RPC });
+let account = null, eip1193 = null;
+const realFetch = window.fetch.bind(window);
+// The SDK quotes fees with an eth_call that has a gas price and no sender, which the node refuses from the zero address.
+window.fetch = async (input, init) => {
+  if (account && init && typeof init.body === "string" && init.body.includes('"eth_call"')) {
+    const body = JSON.parse(init.body);
+    for (const req of Array.isArray(body) ? body : [body]) if (req.method === "eth_call" && req.params?.[0] && !req.params[0].from) req.params[0].from = account;
+    return realFetch(input, { ...init, body: JSON.stringify(body) });
+  }
+  return realFetch(input, init);
+};
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const short = (a) => (a ? `${String(a).slice(0, 6)}...${String(a).slice(-4)}` : "");
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const say = (t) => { $("status").textContent = t; };
+const errText = (e) => e?.code === 4001 || e?.code === "ACTION_REJECTED" ? "Rejected in the wallet." : (e?.shortMessage || e?.reason || e?.message || String(e));
+$("mandate").value = MANDATE;
+for (const [elId, addr, base] of [["aCourt", DEP.overrule, EXPLORER], ["aEnf", DEP.court_enforcer, CHAIN_EXPLORER], ["aDm", DEP.delegation_manager, CHAIN_EXPLORER], ["aHy", DEP.hybrid_impl, CHAIN_EXPLORER]]) { $(elId).href = base + "/address/" + addr; $(elId).textContent = addr; }
+const store = { get: (k) => { try { return JSON.parse(localStorage.getItem("overrule:" + account + ":" + k)); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem("overrule:" + account + ":" + k, JSON.stringify(v)); } catch {} } };
+function track(stage) { document.querySelectorAll("#track span").forEach((el, i) => { el.className = i < stage ? "done" : i === stage ? "on" : ""; }); }
+
+async function ensureWallet() {
+  eip1193 = window.ethereum;
+  if (!eip1193) throw new Error("No wallet found. Reading needs none; to act, open this page in a browser with MetaMask.");
+  if (!account) { const a = await eip1193.request({ method: "eth_requestAccounts" }); account = a && a[0]; $("connect").textContent = short(account); }
+  const cur = await eip1193.request({ method: "eth_chainId" });
+  if (String(cur).toLowerCase() !== CHAIN_ID_HEX) {
+    try { await eip1193.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_ID_HEX }] }); }
+    catch (err) { if (err && (err.code === 4902 || err.code === -32603)) await eip1193.request({ method: "wallet_addEthereumChain", params: [CHAIN_PARAMS] }); else throw err; }
+  }
+  return await new BrowserProvider(eip1193).getSigner();
+}
+async function refresh() {
+  if (!account) return;
+  const sa = store.get("account"), d = store.get("delegation");
+  if (sa) $("acct").textContent = "smart account " + short(sa) + ", " + formatUnits(await tokenRead.balanceOf(sa), 18) + " tUSD";
+  if (d) $("dhash").textContent = "delegation " + short(d.hash);
+  let stage = sa ? 1 : 0;
+  if (d) stage = 2;
+  if (d) { const s = await enfRead.state(d.hash); if (Number(s[2]) > 0) stage = 3; if (s[0]) stage = 5; else { const c = JSON.parse(await reader.readContract({ address: DEP.overrule, functionName: "case", args: [d.hash] })); if (c.exists !== false) stage = 4; } }
+  track(stage);
+}
+$("connect").onclick = async () => { try { await ensureWallet(); $("wstatus").textContent = "Connected " + short(account) + " on GenLayer Bradbury."; refresh(); } catch (e) { $("wstatus").textContent = errText(e); } };
+
+$("open").onclick = async () => {
+  try {
+    const signer = await ensureWallet();
+    let sa = store.get("account");
+    if (!sa) {
+      say("Deploy your MetaMask smart account (HybridDeleGator) ...");
+      const proxy = await new ContractFactory(["constructor(address implementation, bytes data)"], PROXY_BYTECODE, signer)
+        .deploy(DEP.hybrid_impl, HYBRID_INIT.encodeFunctionData("initialize", [account, [], [], []]));
+      await proxy.waitForDeployment();
+      sa = await proxy.getAddress(); store.set("account", sa);
+    }
+    const token = new Contract(DEP.testusd, TOKEN_ABI, signer);
+    say("Mint 100 test dollars ...");
+    await (await token.mint(parseUnits("100", 18))).wait();
+    say("Move them into the smart account ...");
+    await (await token.transfer(sa, parseUnits("100", 18))).wait();
+    say("Your smart account holds 100 tUSD. Now sign the mandate."); refresh();
+  } catch (e) { say(errText(e)); }
+};
+
+$("sign").onclick = async () => {
+  try {
+    const signer = await ensureWallet();
+    const sa = store.get("account");
+    if (!sa) { say("Open a smart account first."); return; }
+    const caveats = [
+      { enforcer: DEP.amount_enforcer, terms: solidityPacked(["address", "uint256"], [DEP.testusd, parseUnits("100", 18)]), args: "0x" },
+      { enforcer: DEP.court_enforcer, terms: keccak256(toUtf8Bytes(MANDATE)), args: "0x" },
+    ];
+    const d = { delegate: account, delegator: sa, authority: ROOT_AUTHORITY, caveats, salt: BigInt(Date.now()), signature: "0x" };
+    const domain = { name: "DelegationManager", version: "1", chainId: 4221, verifyingContract: DEP.delegation_manager };
+    const types = { Delegation: [{ name: "delegate", type: "address" }, { name: "delegator", type: "address" }, { name: "authority", type: "bytes32" }, { name: "caveats", type: "Caveat[]" }, { name: "salt", type: "uint256" }],
+      Caveat: [{ name: "enforcer", type: "address" }, { name: "terms", type: "bytes" }] };
+    say("Sign the delegation in MetaMask: you, as the smart account's owner, let yourself as the agent spend under the mandate.");
+    d.signature = await signer.signTypedData(domain, types, { ...d, caveats: caveats.map(({ enforcer, terms }) => ({ enforcer, terms })) });
+    const hash = await dmRead.getDelegationHash(d);
+    store.set("delegation", { ...d, salt: d.salt.toString(), hash });
+    say("Signed. Now spend as the agent."); refresh();
+  } catch (e) { say(errText(e)); }
+};
+
+async function pay(to, units, memo) {
+  try {
+    const signer = await ensureWallet();
+    const d = store.get("delegation");
+    if (!d) { say("Sign the delegation first."); return; }
+    const withMemo = { ...d, caveats: d.caveats.map((c, i) => ({ ...c, args: i === 1 ? "0x" + [...new TextEncoder().encode(memo)].map((b) => b.toString(16).padStart(2, "0")).join("") : "0x" })) };
+    delete withMemo.hash;
+    const ctx = AbiCoder.defaultAbiCoder().encode([DTUPLE], [[withMemo]]);
+    const call = new Interface(TOKEN_ABI).encodeFunctionData("transfer", [to, parseUnits(String(units), 18)]);
+    say(`As the agent, redeem the delegation: pay ${units} tUSD ...`);
+    const dm = new Contract(DEP.delegation_manager, DM_ABI, signer);
+    await (await dm.redeemDelegations([ctx], [SINGLE_DEFAULT], [solidityPacked(["address", "uint256", "bytes"], [DEP.testusd, 0, call])])).wait();
+    say(`Paid ${units} tUSD under the delegation. The CourtEnforcer recorded it with your memo.`); refresh(); lookup();
+  } catch (e) { say("The payment did not go through: " + errText(e)); }
+}
+$("payOk").onclick = () => pay(VENDOR, 10, "API credits for this month");
+$("payBad").onclick = () => pay(OUTSIDER, 15, "Approved by the owner: one-off consulting fee");
+$("again").onclick = () => pay(VENDOR, 5, "more API credits");
+
+$("review").onclick = async () => {
+  try {
+    await ensureWallet();
+    const d = store.get("delegation");
+    if (!d) { say("Sign the delegation first."); return; }
+    const c = createClient({ chain: testnetBradbury, endpoint: RPC, account, provider: eip1193 });
+    const gasLimit = 300000n, maxGasPrice = 1000000000n, budget = gasLimit * maxGasPrice;
+    const feeParams = AbiCoder.defaultAbiCoder().encode(["uint256", "uint256"], [gasLimit, maxGasPrice]);
+    // A verdict of OVERRULE is a call the court sends to the enforcer; this budget pays for it on GenLayer Chain.
+    const messageAllocations = [{ messageType: 0, onAcceptance: false, recipient: DEP.court_enforcer, budget, feeParams }];
+    const quote = await c.estimateTransactionFees({ totalMessageFees: budget, messageAllocations });
+    say("Approve the review request in MetaMask ...");
+    const hash = await c.writeContract({ address: DEP.overrule, functionName: "review", args: [d.hash, MANDATE], value: 0n, fees: { distribution: quote.distribution, feeValue: quote.feeValue, messageAllocations } });
+    const link = (text) => { const a = document.createElement("a"); a.href = EXPLORER + "/tx/" + hash; a.target = "_blank"; a.rel = "noopener"; a.textContent = "transaction"; $("status").textContent = text + " "; $("status").appendChild(a); };
+    for (let i = 0; i < 300; i++) {
+      await sleep(6000);
+      let tx = null; try { tx = await reader.getTransaction({ hash }); } catch {}
+      const name = String(tx?.statusName || "");
+      if (name === "FINALIZED") {
+        const cs = JSON.parse(await reader.readContract({ address: DEP.overrule, functionName: "case", args: [d.hash] }));
+        const last = (cs.log || [])[cs.log.length - 1] || {};
+        if (!last.verdict) { link("Final, and nothing was judged: there may be no new payment to review."); return; }
+        if (last.verdict === "OVERRULE") {
+          for (let k = 0; k < 20 && !(await enfRead.overruled(d.hash)); k++) { link("Final: Internet Court ruled OVERRULE. Waiting for the court's call to land on the enforcer..."); await sleep(5000); }
+          link("Final: Internet Court ruled OVERRULE, and the delegation is revoked on chain. Try to pay again.");
+        } else link("Final: Internet Court ruled CONTINUE. The delegation keeps working.");
+        refresh(); lookup(); loadBoard(); return;
+      }
+      if (["UNDETERMINED", "CANCELED", "LEADER_TIMEOUT", "VALIDATORS_TIMEOUT"].includes(name)) { link(`The round ended ${name} and changed nothing.`); return; }
+      link(name === "ACCEPTED" ? "Accepted by the validators. The court acts only once its verdict is final..." : `The judges are reading the payments... ${(i + 1) * 6}s, ${name || "waiting for the network"}.`);
+    }
+  } catch (e) { say(errText(e)); }
+};
+
+async function lookup() {
+  const d = store.get("delegation");
+  if (!d) return;
+  try {
+    const [s, c] = await Promise.all([enfRead.state(d.hash), reader.readContract({ address: DEP.overrule, functionName: "case", args: [d.hash] }).then(JSON.parse)]);
+    const box = $("result"); box.style.display = "block";
+    const log = (c.log || []).slice().reverse().map((e) => `<div>review #${e.n}: <b>${esc(e.verdict)}</b> on payments ${e.from} to ${e.to - 1} <span class="muted">${esc(e.why)}</span></div>`).join("");
+    box.innerHTML = `<div class="row"><span class="verdict v-${s[0] ? "DANGER" : "CLEAR"}">${s[0] ? "OVERRULED" : "ACTIVE"}</span><span class="muted">${esc(s[2])} payment(s) on record</span></div>
+      <div class="kv"><div>Delegation</div><div class="mono">${esc(d.hash)}</div><div>Mandate hash</div><div class="mono">${esc(s[1])}</div></div><div class="log">${log}</div>`;
+  } catch (e) { say("Could not read: " + errText(e)); }
+}
+async function loadBoard() {
+  try {
+    const data = JSON.parse(await reader.readContract({ address: DEP.overrule, functionName: "page", args: [0n, 20n] }));
+    if (!data.items.length) { $("board").innerHTML = '<div class="muted">No cases yet.</div>'; return; }
+    $("board").innerHTML = `<table><thead><tr><th>Delegation</th><th>Status</th><th>Last verdict</th><th>Why</th></tr></thead><tbody>${data.items.map((c) =>
+      `<tr><td class="mono">${esc(short(c.delegation))}</td><td>${esc(c.status)}</td><td>${esc(c.last.verdict)}</td><td class="muted">${esc(String(c.last.why || "").slice(0, 110))}</td></tr>`).join("")}</tbody></table>`;
+  } catch (e) { $("board").innerHTML = `<div class="muted">Could not read the board: ${esc(e?.message || e)}</div>`; }
+}
+loadBoard();
+</script>
+</body>
+</html>
