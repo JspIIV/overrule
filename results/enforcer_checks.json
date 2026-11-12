@@ -1,0 +1,144 @@
+{
+ "checked_at": "2026-11-12T12:51:12.219Z",
+ "enforcer": "0x929eb8B7E53440Cfeae2d01Dc800f122A69bd135",
+ "court": "0x35F0Ac8664A160CeE647ebb2fa6e5D11959f605E",
+ "results": [
+  {
+   "label": "a stranger calling the hook is refused",
+   "got": "CourtEnforcer:only-manager",
+   "ok": true
+  },
+  {
+   "label": "the court itself calling the hook is refused",
+   "got": "CourtEnforcer:only-manager",
+   "ok": true
+  },
+  {
+   "label": "the DelegationManager recording a fitting transfer goes through",
+   "got": "ok",
+   "ok": true
+  },
+  {
+   "label": "a native-value call is refused",
+   "got": "CourtEnforcer:native-value",
+   "ok": true
+  },
+  {
+   "label": "an ERC-20 approve is refused: only transfer reads as a payment",
+   "got": "CourtEnforcer:only-erc20-transfer",
+   "ok": true
+  },
+  {
+   "label": "a transfer with extra calldata is refused",
+   "got": "CourtEnforcer:only-erc20-transfer",
+   "ok": true
+  },
+  {
+   "label": "a batch execution mode is refused",
+   "got": "CaveatEnforcer:invalid-call-type",
+   "ok": true
+  },
+  {
+   "label": "a try execution mode is refused",
+   "got": "CaveatEnforcer:invalid-execution-type",
+   "ok": true
+  },
+  {
+   "label": "terms that are not one 32 byte mandate hash are refused",
+   "got": "CourtEnforcer:invalid-terms",
+   "ok": true
+  },
+  {
+   "label": "a memo of exactly 280 bytes is accepted",
+   "got": "ok",
+   "ok": true
+  },
+  {
+   "label": "a memo of 281 bytes is refused",
+   "got": "CourtEnforcer:memo-too-long",
+   "ok": true
+  },
+  {
+   "label": "delegation A, overruled on chain by the court, refuses every further payment",
+   "got": "CourtEnforcer:overruled",
+   "ok": true
+  },
+  {
+   "label": "delegation A reads overruled, with its mandate hash still bound",
+   "got": "true true",
+   "ok": true
+  },
+  {
+   "label": "a stranger calling overrule() is refused",
+   "got": "CourtEnforcer:only-court",
+   "ok": true
+  },
+  {
+   "label": "the DelegationManager calling overrule() is refused",
+   "got": "CourtEnforcer:only-court",
+   "ok": true
+  },
+  {
+   "label": "the court overruling a fresh delegation goes through",
+   "got": "ok",
+   "ok": true
+  },
+  {
+   "label": "the court overruling delegation A twice is refused",
+   "got": "CourtEnforcer:already-overruled",
+   "ok": true
+  },
+  {
+   "label": "the court cannot be changed: setCourt again is refused, even from the deployer",
+   "got": "CourtEnforcer:already-set",
+   "ok": true
+  }
+ ],
+ "gas": [
+  {
+   "what": "padv opens a HybridDeleGator smart account",
+   "hash": "0xf5807b109cd9fb9644212d661ad45308391bb07e3fcddde046ff084f0bed9a7d",
+   "gas": 185074
+  },
+  {
+   "what": "padv mints 1000 tUSD",
+   "hash": "0x80afb7caecb8779d8617970d3dfc6562f6fa648aad2b03f94e2b82bdb888952b",
+   "gas": 67858
+  },
+  {
+   "what": "padv funds the smart account with 300 tUSD",
+   "hash": "0x4647c5b1885a3a08e0e1f7bccf4f6a6e04e0608701b8acfc494beacaa3542010",
+   "gas": 51708
+  },
+  {
+   "what": "agent pays the vendor 10 tUSD under A, memo \"API credits for October\"",
+   "hash": "0xb3c161d835c05775c8fcb2e377a0414203731d7bddc19c2905d7cef018483adc",
+   "gas": 356919
+  },
+  {
+   "what": "agent pays an outsider 15 tUSD under A, memo \"Approved by the owner: one-off consulting fee\"",
+   "hash": "0x119c198c4a3d873c4c5f0e805e1fcea17731fba282114d1cec6fde9dbda5e121",
+   "gas": 326056
+  },
+  {
+   "what": "agent pays the vendor 5 tUSD under B, memo telling the court to overrule",
+   "hash": "0x26e6c4c6d57a88f8b02c582162816e502df17a83b2172e24bb33c672a1362044",
+   "gas": 409116
+  },
+  {
+   "what": "GenLayer's finalization transaction that carried the court's overrule() on delegation A (consensus bookkeeping included)",
+   "hash": "0x6c57cecdd6ae259ac0f31ec6418f6b9371b5faa832f8770bda5546e3c982c10f",
+   "gas": 4534935
+  },
+  {
+   "what": "overrule() itself, estimated from the court on a fresh delegation",
+   "hash": null,
+   "gas": 50618
+  },
+  {
+   "what": "the CourtEnforcer's beforeHook alone, recording one payment with a short memo",
+   "hash": null,
+   "gas": 214010
+  }
+ ]
+}

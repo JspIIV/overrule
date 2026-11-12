@@ -55,6 +55,8 @@ Addresses are in [`deployment.json`](deployment.json) and [`SKILL.md`](SKILL.md)
 - **Damage between reviews is capped** by MetaMask's own `ERC20TransferAmountEnforcer`, which the court cannot raise.
   The person's own `disableDelegation` always works too.
 - **The verdict is agreed by the round, compared in code.** The reasoning kept on the record is the leading judge's words.
+- **A wrong OVERRULE can be appealed before it lands.** Anybody may ask for a review, but nobody chooses the verdict, and
+  the overrule message is delivered only when the GenLayer transaction is finalized, after its appeal window.
 
 ## Proven on Bradbury
 
@@ -86,9 +88,19 @@ seven match.
 
 ## Tests
 
-`python tests/overrule_rules.py`: 26 checks through the real court against a stub of the runtime and the enforcer,
-covering the signed mandate binding, refusals, CONTINUE and OVERRULE and what each sends, batches and the cursor,
-unreadable and disagreeing rulings, hostile memos both ways, and `resend`.
+`python tests/overrule_rules.py`: 27 checks through the real court against a stub of the runtime and the enforcer,
+covering the signed mandate binding, refusals, CONTINUE and OVERRULE and what each sends, batches and the cursor
+(25 payments judged as 20 then 5, exactly 20 in one review), unreadable and disagreeing rulings, hostile memos both
+ways, and `resend`.
+
+`node scripts/enforcer_checks.mjs`: 18 checks against the **deployed** CourtEnforcer on GenLayer Chain, running every
+guard with `eth_call` as the DelegationManager, the court, the deployer and a stranger: who may record a payment, what a
+payment may be (native value, `approve`, padded calldata, batch and try modes, the 280 byte memo limit), that the
+overruled delegation refuses every further payment, and who may overrule. It also reads the gas of the proof's own
+transactions.
+
+[`SECURITY.md`](SECURITY.md) maps every trust surface to the line that enforces it and the check that proves it, and
+[`docs/API.md`](docs/API.md) lists every method, argument and revert string.
 
 ## Reproduce
 
@@ -96,6 +108,7 @@ unreadable and disagreeing rulings, hostile memos both ways, and `resend`.
 npm install
 git submodule update --init --recursive     # MetaMask's framework at v1.3.0
 python tests/overrule_rules.py
+node scripts/enforcer_checks.mjs
 node scripts/verify.mjs && node scripts/verify_evm.mjs
 ```
 

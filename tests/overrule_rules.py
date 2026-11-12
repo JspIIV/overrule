@@ -219,6 +219,17 @@ def main():
     nd.answers = [rule("CONTINUE")]
     J(c.review(H2, MANDATE))
     check_("and the next batch starts exactly where the last one ended", J(c.case(H2))["cursor"] == module.MAX_BATCH + 5)
+    D6 = bytes([6]) * 32
+    H6 = "0x" + D6.hex()
+    enf.delegate(D6, MANDATE)
+    for i in range(module.MAX_BATCH):
+        enf.pay(D6, TOKEN, VENDOR, 1, "credits " + str(i))
+    nd.answers = [rule("CONTINUE")]
+    nd.prompts = []
+    J(c.review(H6, MANDATE))
+    check_("exactly one full batch is judged in one review, with nothing left over",
+           J(c.case(H6))["cursor"] == module.MAX_BATCH and "#0:" in nd.prompts[0] and "#%d:" % (module.MAX_BATCH - 1) in nd.prompts[0]
+           and "no new payment" in J(c.review(H6, MANDATE))["error"])
     D3 = bytes([3]) * 32
     H3 = "0x" + D3.hex()
     enf.delegate(D3, MANDATE)
