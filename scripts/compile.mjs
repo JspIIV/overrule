@@ -6,7 +6,7 @@ import fs from 'fs'; import path from 'path'; import url from 'url';
 
 const require = createRequire(import.meta.url);
 export const ROOT = path.join(path.dirname(url.fileURLToPath(import.meta.url)), '..');
-const solc = require('solc/wrapper')(require(path.join(ROOT, 'tools', 'soljson-v0.8.23.cjs')));
+export const solc = require('solc/wrapper')(require(path.join(ROOT, 'tools', 'soljson-v0.8.23.cjs')));
 const DF = path.join(ROOT, 'vendor', 'delegation-framework');
 export const SETTINGS = { optimizer: { enabled: true, runs: 200 }, evmVersion: 'london' };
 const REMAP = [
@@ -30,6 +30,7 @@ export const SOURCES = {
   ERC20TransferAmountEnforcer: 'df/src/enforcers/ERC20TransferAmountEnforcer.sol',
   AllowedTargetsEnforcer: 'df/src/enforcers/AllowedTargetsEnforcer.sol',
   CourtEnforcer: 'evm/CourtEnforcer.sol',
+  CourtEnforcerRelayed: 'evm/CourtEnforcerRelayed.sol',
   TestUSD: 'evm/TestUSD.sol',
   SCL_RIP7212: 'df/lib/SCL/src/lib/libSCL_RIP7212.sol',
 };
@@ -42,7 +43,7 @@ function resolve(p) {
   if (p.startsWith('lib/') || p.startsWith('src/')) return path.join(DF, p);
   return path.join(DF, p);
 }
-function findImport(p) {
+export function findImport(p) {
   const f = resolve(p);
   return fs.existsSync(f) ? { contents: fs.readFileSync(f, 'utf8') } : { error: 'not found: ' + p };
 }

@@ -51,6 +51,32 @@ calldata. `overrule()` sets a flag and emits. The only loop in the court reads a
 `contracts/overrule.py`. `node scripts/verify_evm.mjs` recompiles the CourtEnforcer and MetaMask's framework with the
 framework's own settings and matches all seven contracts byte for byte.
 
+## The relayed mode on Base Sepolia
+
+[`contracts/overrule_relayed.py`](contracts/overrule_relayed.py) and
+[`evm/CourtEnforcerRelayed.sol`](evm/CourtEnforcerRelayed.sol) serve delegations on MetaMask's own deployment of the
+framework on Base Sepolia, spending real USDC, where an Intelligent Contract cannot call. What changes:
+
+| Surface | Who can act | Enforced at | Checked by |
+|---|---|---|---|
+| The payments the court judges | nobody supplies them: every validator reads the enforcer's events from Base Sepolia's public Blockscout itself | `overrule_relayed.py` `_read` | `tests/overrule_relayed_rules.py`, `scripts/prove_relayed.mjs` |
+| What the round agrees on | the verdict **and** a sha256 of the exact payment lines judged; a validator that saw a different set fails the round | `overrule_relayed.py`, the `agree` function in `review` | tests: tampered digest fails the round; a payment landing mid round is left for the next review |
+| The mandate and the carrier | the delegator signs `abi.encode(keccak256(mandate), carrier)` into the caveat; bound on first use, never overwritten | `CourtEnforcerRelayed.sol` `beforeHook` | tests and proof |
+| Recording an OVERRULE on Base | the carrier the delegator signed, or the delegator, with a non-zero reason, once | `CourtEnforcerRelayed.sol` `overrule`: `only-carrier`, `no-reason`, `already-overruled` | proof: a stranger is refused |
+| When the carrier acts | only on the court's **finalized** state | `scripts/relay_base.mjs` reads with `transactionHashVariant: 'latest-final'` | the relay script |
+
+**The one trust that is left.** Base cannot read GenLayer, so it cannot check that a recorded reason came from a final
+verdict. The carrier is trusted for that, and only for that: it can end a delegation that names it, never move money or
+loosen a limit, and the delegator could end the delegation themselves at any time. The reason it records is the court's
+own commitment, `sha256("overrule|<hash>|<from>|<to>")`, which anybody can compare with `case(hash).reason` on GenLayer.
+A light client or a proving bridge would remove the carrier; until then the trust is made as small and as checkable as
+this chain allows.
+
+**MetaMask's deployment is the source here.** `node scripts/verify_evm.mjs` compiles the vendored v1.3.0 framework and
+finds MetaMask's DelegationManager, HybridDeleGator and ERC20TransferAmountEnforcer on Base Sepolia identical in every
+executable byte; only the CBOR metadata hash, which covers source file paths, differs. The CourtEnforcerRelayed matches
+exactly, and its source is verified on [Base Sepolia's Blockscout](https://base-sepolia.blockscout.com/address/0x6Ac2179610116E8159Af94Bb068a42fFb902542f?tab=contract).
+
 ## Gas on GenLayer Chain
 
 From `node scripts/enforcer_checks.mjs`, reading the proof's own receipts:

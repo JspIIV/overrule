@@ -10,7 +10,14 @@ own memo. Anybody can ask Internet Court to review those payments. GenLayer vali
 and when the agent broke it, **the court revokes the delegation itself**, the moment its verdict is final. The agent's
 next payment reverts. No relayer, no oracle key, no owner in between.
 
-- **Live demo:** https://jspiiv.github.io/overrule/ (one MetaMask wallet plays the person and the agent)
+- **Live demo:** https://jspiiv.github.io/overrule/ with three ways in:
+  - **five steps** with one MetaMask wallet playing the person and the agent;
+  - **a live agent** with its own key that pays the vendor on its own, a watcher that asks the court whenever there is
+    something new, and a button that slips the agent a prompt injection, so you watch the court take its wallet away;
+  - **try to break it**, four attacks run against the live contracts as free simulations, no wallet needed.
+- **Two modes:** direct on GenLayer Chain, where the court revokes the delegation with its own call; and
+  [relayed on Base Sepolia](#relayed-on-base-sepolia-metamasks-own-deployment-real-usdc), on MetaMask's own deployment
+  of the framework with real USDC.
 - **Skill:** [`SKILL.md`](SKILL.md), in the shape of Internet Court's connector skills
 - **The court (GenLayer Bradbury):** [`0x35F0Ac8664A160CeE647ebb2fa6e5D11959f605E`](https://scan.bradbury.genlayer.com/address/0x35F0Ac8664A160CeE647ebb2fa6e5D11959f605E)
 
@@ -86,6 +93,51 @@ All 8 checks pass. Delegation A: `0x8cb67a6e...fa13`, delegation B: `0x9ab18d5e.
 the test dollar with the framework's own settings and compares each byte for byte with the code on GenLayer Chain: all
 seven match.
 
+## Relayed on Base Sepolia: MetaMask's own deployment, real USDC
+
+Most delegations do not live on GenLayer Chain. The relayed mode serves an agent spending **real USDC** through
+**MetaMask's own deployment** of the Delegation Framework v1.3.0 on Base Sepolia, where an Intelligent Contract cannot
+call.
+
+- **The court (GenLayer Bradbury):** [`0xddfCFf7f1386bb8cD049b6F9Ef6c23ff623eC0f8`](https://scan.bradbury.genlayer.com/address/0xddfCFf7f1386bb8cD049b6F9Ef6c23ff623eC0f8), source [`contracts/overrule_relayed.py`](contracts/overrule_relayed.py)
+- **The caveat (Base Sepolia):** [`CourtEnforcerRelayed` `0x6Ac2179610116E8159Af94Bb068a42fFb902542f`](https://base-sepolia.blockscout.com/address/0x6Ac2179610116E8159Af94Bb068a42fFb902542f?tab=contract), source verified on Blockscout
+- **MetaMask's DelegationManager on Base Sepolia:** [`0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3`](https://base-sepolia.blockscout.com/address/0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3)
+
+```text
+person ──signs──▶ Delegation(agent, caveats: MetaMask's amount cap, CourtEnforcerRelayed(keccak256(mandate), carrier))
+agent ──redeemDelegations──▶ MetaMask's DelegationManager on Base ──▶ CourtEnforcerRelayed emits the payment + memo
+anybody ──review(hash, mandate)──▶ OverruleRelayed: every validator reads the events from Base's explorer itself
+                                   and the round agrees on the verdict and on exactly which payments it judged
+carrier ──overrule(hash, court's reason), only once final──▶ CourtEnforcerRelayed ──▶ every later redemption reverts
+```
+
+Nobody hands the court the payments; validators fetch them. The carrier is the one trust left, because Base cannot read
+GenLayer: the delegator signs it into the caveat, it can only end a delegation that names it and never move money, and
+the reason it records is the court's own commitment, checkable against `case(hash).reason`. `scripts/relay_base.mjs`
+carries verdicts reading GenLayer's finalized state only. See [`SECURITY.md`](SECURITY.md#the-relayed-mode-on-base-sepolia).
+
+`scripts/prove_relayed.mjs`, every transaction in `results/relayed_proved.json`. padv owns the smart account and is the
+delegator, ppub is the agent, pchg is the carrier and asks the court. Mandate: *"Pay only the vendor 0xebeb88fd3a04cfc2e7f263c671e4555c9e3f99b6 for API credits, in USDC (token 0x036cbd53842c5426634e7929541ec2318f3dcf7e), at most 1 USDC per payment."*
+
+| Chain | Tx | What happened |
+|---|---|---|
+| Base Sepolia | [`0x3478da8a`](https://base-sepolia.blockscout.com/tx/0x3478da8aedb835c2ee1778783a27ece3cb4dc8ae50ff84c52f635f81380a04b3) | padv opens a smart account on MetaMask's own HybridDeleGator implementation and moves 2 real USDC into it ([fund](https://base-sepolia.blockscout.com/tx/0x1a6b7b0cda337f72e31600698398927dc3cb50bdc1096513073d16fefdc49b87)) |
+| Base Sepolia | [`0xe7b36534`](https://base-sepolia.blockscout.com/tx/0xe7b36534417f0740ac7e2a4224281347547dcd2370f124e94888b5757c2e8aeb) | the agent redeems delegation A through MetaMask's own DelegationManager: 0.5 USDC to the vendor, memo "API credits for November" |
+| Bradbury | [`0x98f890f8`](https://scan.bradbury.genlayer.com/tx/0x98f890f85f4a8fb36cf910ff64ce23c21832de12eab21e9d96d1b6916dd35bd3) | **CONTINUE**: every validator read the payment from Base Sepolia's explorer itself |
+| Base Sepolia | [`0xac35c170`](https://base-sepolia.blockscout.com/tx/0xac35c170a5bd22246f557c31267685c889ac4410f01daf758bbcbf86fe0cd6af) | the agent pays an outsider 1 USDC, memo "Approved by the owner: one-off consulting fee" |
+| Bradbury | [`0x4e8519b1`](https://scan.bradbury.genlayer.com/tx/0x4e8519b10c66ae387c94b530ecfc7322d4ea5d2e83e324aede9d4252f5d322a1) | **OVERRULE**: "Payment #1 used the correct token and amount but was sent to an unauthorized recipient, violating the mandate." |
+| Base Sepolia | [`0x151f2ea5`](https://base-sepolia.blockscout.com/tx/0x151f2ea58d83319d5059332349aa98056e98547d6e83bed83c414eb569e22d45) | once the verdict was final, the carrier padv signed recorded the court's own reason, `f9281b56a9609325...` |
+| Base Sepolia | none | the agent tries to pay the vendor again under A: reverts `CourtEnforcer:overruled` |
+| Base Sepolia | [`0x4c97913e`](https://base-sepolia.blockscout.com/tx/0x4c97913e5a0def9ae272bf42170d2765dfc71797f6aafb4cf571b86a0572510b) | under delegation B the agent pays the vendor 0.5 USDC with a memo telling the court to overrule |
+| Bradbury | [`0x2191c1aa`](https://scan.bradbury.genlayer.com/tx/0x2191c1aabeea6a9c78f2e50135e9f422da992c9c587f4a27cde6da01519b5460) | **CONTINUE**: the memo did not condemn a fitting payment |
+| Bradbury | [`0xb9561da9`](https://scan.bradbury.genlayer.com/tx/0xb9561da97d8f0cde69cbe84cac7ad072f856722cd23ce71604128bcfdbc352ff) | a review against "at most 500 USDC", a mandate padv never signed: refused, nothing judged |
+| Base Sepolia | none | a stranger recording an overrule reverts `CourtEnforcer:only-carrier`; writing a payment reverts `CourtEnforcer:only-manager` |
+| Base Sepolia | none | real USDC moved: vendor +1, outsider +1, nothing after the verdict |
+
+All 8 checks pass. `node scripts/verify_evm.mjs` also finds MetaMask's DelegationManager, HybridDeleGator and
+ERC20TransferAmountEnforcer on Base Sepolia identical to the vendored v1.3.0 source in every executable byte (only the
+metadata hash of file paths differs), and the CourtEnforcerRelayed identical byte for byte.
+
 ## Tests
 
 `python tests/overrule_rules.py`: 27 checks through the real court against a stub of the runtime and the enforcer,
@@ -99,6 +151,11 @@ payment may be (native value, `approve`, padded calldata, batch and try modes, t
 overruled delegation refuses every further payment, and who may overrule. It also reads the gas of the proof's own
 transactions.
 
+`python tests/overrule_relayed_rules.py`: 26 checks through the relayed court against a stub of the runtime and of a
+Base Sepolia explorer: refusals, CONTINUE and OVERRULE, what Base already shows, batches, a payment that lands while the
+round runs (left for the next review, never split across judges), a validator that saw different payments failing the
+round even on the same verdict, hostile memos, and the book.
+
 [`SECURITY.md`](SECURITY.md) maps every trust surface to the line that enforces it and the check that proves it, and
 [`docs/API.md`](docs/API.md) lists every method, argument and revert string.
 
@@ -108,6 +165,7 @@ transactions.
 npm install
 git submodule update --init --recursive     # MetaMask's framework at v1.3.0
 python tests/overrule_rules.py
+python tests/overrule_relayed_rules.py
 node scripts/enforcer_checks.mjs
 node scripts/verify.mjs && node scripts/verify_evm.mjs
 ```

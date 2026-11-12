@@ -37,5 +37,25 @@
   "address": "0x35F0Ac8664A160CeE647ebb2fa6e5D11959f605E",
   "tx": "0x6f8991b68920d7cbfa425190429f5ac91d09a410baddcb1b6a54f2d024ab18b0",
   "deployed_at": "2026-11-09T14:46:08.194Z",
-  "wired": true
+  "wired": true,
+  "relayed": {
+    "chain": "base-sepolia",
+    "rpc": "https://base-sepolia-rpc.publicnode.com",
+    "explorer": "https://base-sepolia.blockscout.com",
+    "chain_id": 84532,
+    "delegation_manager": "0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3",
+    "hybrid_impl": "0x48dBe696A4D990079e039489bA2053B36E8FFEC4",
+    "amount_enforcer": "0xf100b0819427117EcF76Ed94B358B1A5b5C6D2Fc",
+    "usdc": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    "court_enforcer": {
+      "address": "0x6Ac2179610116E8159Af94Bb068a42fFb902542f",
+      "tx": "0x31f12273e491c26fcf79c1c493c34d11c7f1ffcc55a7f90b7be7cd3d03f7aba8",
+      "block": 57836293
+    },
+    "overrule": {
+      "address": "0xddfCFf7f1386bb8cD049b6F9Ef6c23ff623eC0f8",
+      "tx": "0x9b18dc33f5e2eb10399664b48b5260b765468142d2825f8e15c32bd7eb917318",
+      "deployed_at": "2026-11-12T13:12:38.306Z"
+    }
+  }
 }

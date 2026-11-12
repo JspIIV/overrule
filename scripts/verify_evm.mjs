@@ -30,5 +30,26 @@ for (const [key, name] of TARGETS) {
   all = all && same;
   console.log(`${same ? 'MATCH    ' : 'DIFFERENT'} ${name.padEnd(28)} ${dep[key].address}  ${[...new Set(fixed)].slice(0, 3).join(', ')}`);
 }
+// The relayed mode: our CourtEnforcerRelayed on Base Sepolia, and MetaMask's own deployment of the framework there,
+// compiled from the same vendored source and settings.
+if (dep.relayed) {
+  const base = new JsonRpcProvider(dep.relayed.rpc, dep.relayed.chain_id, { staticNetwork: true });
+  console.log("Base Sepolia (84532): MetaMask's own v1.3.0 deployment, and the CourtEnforcerRelayed");
+  for (const [addr, name] of [[dep.relayed.delegation_manager, 'DelegationManager'], [dep.relayed.hybrid_impl, 'HybridDeleGator'],
+    [dep.relayed.amount_enforcer, 'ERC20TransferAmountEnforcer'], [dep.relayed.court_enforcer.address, 'CourtEnforcerRelayed']]) {
+    const c = compile(name);
+    const live = (await base.getCode(addr)).slice(2).toLowerCase();
+    const filled = c.deployed.split('');
+    for (const spots of Object.values(c.refs)) for (const { start, length } of spots) for (let i = start * 2; i < (start + length) * 2; i++) filled[i] = live[i];
+    for (const byName of Object.values(c.dlinks)) for (const spots of Object.values(byName)) for (const { start, length } of spots) for (let i = start * 2; i < (start + length) * 2; i++) filled[i] = live[i];
+    // MetaMask compiled from its own checkout, so the CBOR metadata at the end (which hashes source file paths) can
+    // differ while every executable byte is the same. Compare the code with each side's metadata removed.
+    const strip = (hex) => hex.slice(0, hex.length - (parseInt(hex.slice(-4), 16) + 2) * 2);
+    const exact = filled.join('') === live;
+    const code = strip(filled.join('')) === strip(live);
+    all = all && code;
+    console.log(`${exact ? 'MATCH    ' : code ? 'MATCH*   ' : 'DIFFERENT'} ${name.padEnd(28)} ${addr}${!exact && code ? '  * every executable byte; only the metadata hash of file paths differs' : ''}`);
+  }
+}
 console.log(all ? 'every contract on chain is the source in this repository' : 'at least one contract differs');
 process.exit(all ? 0 : 1);

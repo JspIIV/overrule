@@ -1,10 +1,17 @@
 {
-  "checked_at": "2026-11-09T15:34:14.666Z",
+  "checked_at": "2026-11-12T13:24:55.736Z",
   "contract": "0x35F0Ac8664A160CeE647ebb2fa6e5D11959f605E",
   "source_sha256": "5b245f031a6e2d73c46d38df1563a9f0130a82065ea5ba9f96336a576b9309bd",
   "source_matches_chain": true,
   "finalized": 6,
   "accepted": 0,
   "other": 0,
-  "total": 6
+  "total": 6,
+  "relayed": {
+    "contract": "0xddfCFf7f1386bb8cD049b6F9Ef6c23ff623eC0f8",
+    "source_sha256": "1d59935d3d7124ba2f542350d0b84d6cfe46767b19cc5c7396693940594d5051",
+    "source_matches_chain": true,
+    "finalized": 5,
+    "total": 5
+  }
 }

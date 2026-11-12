@@ -32,8 +32,26 @@ for (const row of rows) {
   console.log(`  ${state.padEnd(38)} ${row.hash}  ${row.label}`);
 }
 console.log(`${rows.length} transactions: ${finalized} finalized, ${accepted} accepted and not yet final, ${other} neither (a retried send)`);
+// The relayed court, and the transactions of its proof on Base Sepolia.
+let relayed = null;
+const rp = path.join(ROOT, 'results', 'relayed_proved.json');
+if (deployment.relayed?.overrule && fs.existsSync(rp)) {
+  const rproof = JSON.parse(fs.readFileSync(rp, 'utf8'));
+  const rlocal = fs.readFileSync(path.join(ROOT, 'contracts', 'overrule_relayed.py'), 'utf8').replace(/\r\n/g, '\n');
+  const rraw = await c.getContractCode(deployment.relayed.overrule.address);
+  const rchain = (typeof rraw === 'string' ? rraw : Buffer.from(rraw).toString('utf8')).replace(/\r\n/g, '\n');
+  const rmatch = rchain === rlocal;
+  console.log('\nrelayed court', deployment.relayed.overrule.address, rmatch ? 'MATCH' : 'DIFFERENT', 'sha256', sha(rlocal));
+  let rf = 0;
+  for (const row of [{ label: 'deploy', hash: deployment.relayed.overrule.tx }, ...rproof.txs]) {
+    const tx = await c.getTransaction({ hash: row.hash });
+    if (tx.statusName === 'FINALIZED') rf++;
+    console.log(`  ${(tx.statusName + ' ' + (tx.txExecutionResultName || '')).padEnd(38)} ${row.hash}  ${row.label}`);
+  }
+  relayed = { contract: deployment.relayed.overrule.address, source_sha256: sha(rlocal), source_matches_chain: rmatch, finalized: rf, total: rproof.txs.length + 1 };
+}
 fs.writeFileSync(path.join(ROOT, 'results', 'finality.json'), JSON.stringify({
   checked_at: new Date().toISOString(), contract: proof.contract, source_sha256: sha(local), source_matches_chain: matches,
-  finalized, accepted, other, total: rows.length,
+  finalized, accepted, other, total: rows.length, relayed,
 }, null, 2));
-process.exit(matches ? 0 : 1);
+process.exit(matches && (!relayed || relayed.source_matches_chain) ? 0 : 1);

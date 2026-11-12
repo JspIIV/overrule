@@ -79,12 +79,33 @@ RPC for GenLayer writes: `https://rpc-bradbury.genlayer.com`. RPC for EVM calls:
 ## Reproduce
 
 - Interface: https://jspiiv.github.io/overrule/ (one MetaMask wallet plays both the delegator and the agent)
-- Scripts: `node scripts/prove.mjs` (the full case), `node scripts/verify.mjs` and `node scripts/verify_evm.mjs`
-  (finality, and every contract's bytecode against its source)
+- Scripts: `node scripts/prove.mjs` (the full case), `node scripts/prove_relayed.mjs` (the same on Base Sepolia with
+  real USDC), `node scripts/enforcer_checks.mjs` (every guard of the deployed enforcer), `node scripts/verify.mjs` and
+  `node scripts/verify_evm.mjs` (finality, and every contract's bytecode against its source)
+
+## Relayed mode: MetaMask's own deployment on Base Sepolia
+
+For delegations on a chain the court cannot call, use `CourtEnforcerRelayed` and the `OverruleRelayed` court.
+
+| Contract | Address | Where |
+|---|---|---|
+| OverruleRelayed (the court) | `0xddfCFf7f1386bb8cD049b6F9Ef6c23ff623eC0f8` | GenLayer Bradbury |
+| CourtEnforcerRelayed | `0x6Ac2179610116E8159Af94Bb068a42fFb902542f` | Base Sepolia |
+| DelegationManager, HybridDeleGator, ERC20TransferAmountEnforcer | MetaMask's own v1.3.0 deployment | Base Sepolia |
+
+1. The caveat's terms are `abi.encode(bytes32 keccak256(mandate), address carrier)`: the delegator signs whom they trust
+   to bring the verdict to Base.
+2. `review(delegationHash, mandate)` on the court, with plain fees (no message): every validator reads the enforcer's
+   `Bound`, `PaymentRecorded` and `Overruled` events from Base Sepolia's public Blockscout itself.
+3. Once the verdict is **final**, the carrier (or the delegator) calls `CourtEnforcerRelayed.overrule(hash, reason)` with
+   the court's `case(hash).reason`. `node scripts/relay_base.mjs` does this, reading only GenLayer's finalized state.
+
+The carrier can only end a delegation that names it, never move money, and the reason it records is the court's own,
+checkable against the case on GenLayer. Base cannot read GenLayer, so the carrier is the one trust left in this mode.
 
 ## Limits
 
-- The Delegation Framework must be deployed on GenLayer Chain for the direct mode. A delegation on another chain needs
-  one of the connector's other modes (trusted relayer, optimistic relay, bridge).
+- The direct mode needs the Delegation Framework on GenLayer Chain. On other chains, the relayed mode above carries the
+  verdict through a carrier the delegator signs.
 - The court reviews when somebody asks. Between reviews the amount caveat is what limits the damage; set it low.
 - A ruling is GenLayer validators' reading of payments against plain words. Write mandates that name addresses.
